@@ -81,6 +81,14 @@ bot.onText(/\/admin/, (msg) => {
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
 
+    // ADMIN: Har doim qayta boshlash imkoniyati (Avtomatik reset)
+    if (chatId.toString() === ADMIN_ID) {
+        users[chatId] = { state: STATE_REGISTERING };
+        saveData(users);
+        bot.sendMessage(chatId, "👑 Admin rejimidasiz. Bot siz uchun qayta ishga tushdi.\n\nAssalomu alaykum! Iltimos, ism va familiyangizni yozib yuboring:");
+        return;
+    }
+
     // Agar foydalanuvchi birinchi marta kirayotgan bo'lsa
     if (!users[chatId]) {
         users[chatId] = { state: STATE_REGISTERING };
