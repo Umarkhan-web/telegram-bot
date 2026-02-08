@@ -1,0 +1,17 @@
+{
+  "name": "random-number-bot",
+  "version": "1.0.0",
+  "description": "A simple Telegram bot that sends a random number on logic",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.4",
+    "express": "^5.2.1",
+    "node-telegram-bot-api": "^0.66.0"
+  },
+  "devDependencies": {
+    "pm2": "^6.0.14"
+  }
+}
