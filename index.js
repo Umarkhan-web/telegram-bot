@@ -22,9 +22,35 @@ const token = process.env.BOT_TOKEN || '7972728722:AAGu6_3MqTX1IO43pWj6y1SerKXa3
 // Botni yaratish (polling true bo'lishi kerak, shunda bot xabarlarni tekshirib turadi)
 const bot = new TelegramBot(token, { polling: true });
 
+// Ma'lumotlar bazasi fayli
+const DB_FILE = path.join(__dirname, 'data.json');
+
+// Ma'lumotlarni yuklash funksiyasi
+function loadData() {
+    if (fs.existsSync(DB_FILE)) {
+        try {
+            const data = fs.readFileSync(DB_FILE, 'utf8');
+            return JSON.parse(data);
+        } catch (err) {
+            console.error('Error reading database:', err);
+            return {};
+        }
+    }
+    return {};
+}
+
+// Ma'lumotlarni saqlash funksiyasi
+function saveData(data) {
+    try {
+        fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+    } catch (err) {
+        console.error('Error writing database:', err);
+    }
+}
+
 // Foydalanuvchilar ma'lumotlarini saqlash
 // Tuzilishi: { chatId: { state: 'REGISTERING' | 'SELECTING' | 'DONE', name: 'Alisher' } }
-const users = {};
+let users = loadData();
 
 // States
 const STATE_REGISTERING = 'REGISTERING';
@@ -38,6 +64,7 @@ bot.onText(/\/start/, (msg) => {
     // Agar foydalanuvchi birinchi marta kirayotgan bo'lsa
     if (!users[chatId]) {
         users[chatId] = { state: STATE_REGISTERING };
+        saveData(users);
         bot.sendMessage(chatId, "Assalomu alaykum! Iltimos, ism va familiyangizni yozib yuboring:");
         return;
     }
@@ -72,6 +99,7 @@ bot.on('message', (msg) => {
     // yoki shunchaki yangi user deb olishimiz mumkin. Keling, yangi user deb olaylik.
     if (!users[chatId]) {
         users[chatId] = { state: STATE_REGISTERING };
+        saveData(users);
         // Ismni qabul qilish o'rniga, start bosishni so'raymiz yoki to'g'ridan-to'g'ri ism deb qabul qilamiz?
         // Mantiqan birinchi xabar ism bo'lishi ehtimoli katta agar start bosgandan keyin yozsa.
         // Lekin xavfsizlik uchun start bosishni so'ragan ma'qul.
@@ -85,6 +113,7 @@ bot.on('message', (msg) => {
     if (user.state === STATE_REGISTERING) {
         user.name = text; // Ismni saqlab qo'yamiz
         user.state = STATE_SELECTING;
+        saveData(users);
 
         sendNumberKeyboard(chatId, `Rahmat, ${user.name}! Endi 1 dan 10 gacha bo'lgan raqamlardan birini tanlang va maxsus faylni qo'lga kiriting:`);
     }
@@ -98,6 +127,7 @@ bot.on('message', (msg) => {
             if (fs.existsSync(filePath)) {
                 // Holatni o'zgartiramiz, endi qayta tanlay olmaydi
                 user.state = STATE_DONE;
+                saveData(users);
 
                 bot.sendMessage(chatId, `Siz ${number}-raqamni tanladingiz.`, {
                     reply_markup: {
