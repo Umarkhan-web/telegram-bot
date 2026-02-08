@@ -80,6 +80,8 @@ bot.onText(/\/admin/, (msg) => {
 // /start komandasiga javob
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
+    console.log(`Received /start command from ${chatId}`);
+
 
     // ADMIN: Har doim qayta boshlash imkoniyati (Avtomatik reset)
     if (chatId.toString() === ADMIN_ID) {
@@ -99,7 +101,18 @@ bot.onText(/\/start/, (msg) => {
 
     // Agar allaqachon tugatgan bo'lsa
     if (users[chatId].state === STATE_DONE) {
-        bot.sendMessage(chatId, "Siz allaqachon tanlab bo'lgansiz. Qayta urinish mumkin emas.");
+        // Agar foydalanuvchi qaysi raqamni tanlaganini bilmoqchi bo'lsak,
+        // uni saqlab qo'yishimiz kerak edi. Hozirgi kodda raqam saqlanmayapti.
+        // Shuning uchun, keling, raqam tanlaganda uni ham saqlab qo'yaylik.
+        // Lekin hozircha eski foydalanuvchilar uchun "Siz allaqachon tanlab bo'lgansiz" deb turamiz.
+        // Yangi foydalanuvchilar uchun esa raqamni saqlaymiz.
+
+        const selectedNumber = users[chatId].selectedNumber;
+        if (selectedNumber) {
+            bot.sendMessage(chatId, `Siz allaqachon tanlab bo'lgansiz. Qayta urinish mumkin emas.\nSiz tanlagan raqam: ${selectedNumber}`);
+        } else {
+            bot.sendMessage(chatId, "Siz allaqachon tanlab bo'lgansiz. Qayta urinish mumkin emas.");
+        }
         return;
     }
 
@@ -198,6 +211,7 @@ bot.on('message', (msg) => {
 
             // Holatni o'zgartiramiz, endi qayta tanlay olmaydi
             user.state = STATE_DONE;
+            user.selectedNumber = text; // Raqamni saqlab qo'yamiz
             saveData(users);
 
             bot.sendMessage(chatId, `Siz ${text}-raqamni tanladingiz. Mana siz uchun maxsus havola:\n\n${link}`, {
