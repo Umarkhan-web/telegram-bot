@@ -57,18 +57,25 @@ const STATE_REGISTERING = 'REGISTERING';
 const STATE_SELECTING = 'SELECTING';
 const STATE_DONE = 'DONE';
 
-// /reset komandasi (TESTUCHUN)
-bot.onText(/\/reset/, (msg) => {
+const ADMIN_ID = '6094022048';
+
+// /admin komandasi
+bot.onText(/\/admin/, (msg) => {
     const chatId = msg.chat.id;
-    if (users[chatId]) {
-        delete users[chatId];
-        saveData(users);
-        bot.sendMessage(chatId, "Sizning ma'lumotlaringiz o'chirildi. Qayta /start bosishingiz mumkin.");
-    } else {
-        bot.sendMessage(chatId, "Siz hali ro'yxatdan o'tmagansiz.");
+    if (chatId.toString() === ADMIN_ID) {
+        const opts = {
+            reply_markup: {
+                keyboard: [
+                    ['📊 Statistika', '🔄 Bazani tozalash (Reset All)'],
+                    ['🗑 O\'zimni o\'chirish', '❌ Panelni yopish']
+                ],
+                resize_keyboard: true,
+                one_time_keyboard: true
+            }
+        };
+        bot.sendMessage(chatId, "Admin paneliga xush kelibsiz. Quyidagilardan birini tanlang:", opts);
     }
 });
-
 
 // /start komandasiga javob
 bot.onText(/\/start/, (msg) => {
@@ -84,7 +91,7 @@ bot.onText(/\/start/, (msg) => {
 
     // Agar allaqachon tugatgan bo'lsa
     if (users[chatId].state === STATE_DONE) {
-        bot.sendMessage(chatId, "Siz allaqachon tanlab bo'lgansiz. Qayta urinish mumkin emas.\n(Qayta sinash uchun /reset ni bosing)");
+        bot.sendMessage(chatId, "Siz allaqachon tanlab bo'lgansiz. Qayta urinish mumkin emas.");
         return;
     }
 
@@ -107,6 +114,40 @@ bot.on('message', (msg) => {
 
     // /start komandasi yuqorida handled qilingan, bu yerga kirmasligi kerak yoki ignored
     if (text === '/start') return;
+    if (text === '/admin') return;
+
+    // ADMIN COMMANDS
+    if (chatId.toString() === ADMIN_ID) {
+        if (text === '📊 Statistika') {
+            const count = Object.keys(users).length;
+            bot.sendMessage(chatId, `Jami foydalanuvchilar: ${count} ta`);
+            return;
+        }
+        if (text === '🔄 Bazani tozalash (Reset All)') {
+            users = {};
+            saveData(users);
+            bot.sendMessage(chatId, "Barcha foydalanuvchilar ma'lumotlari o'chirildi. Bot barchaga yangidan boshlanadi.");
+            return;
+        }
+        if (text === "🗑 O'zimni o'chirish") {
+            if (users[chatId]) {
+                delete users[chatId];
+                saveData(users);
+                bot.sendMessage(chatId, "Sizning ma'lumotlaringiz o'chirildi. /start bosib qayta tekshirishingiz mumkin.");
+            } else {
+                bot.sendMessage(chatId, "Sizda o'chirish uchun ma'lumot yo'q.");
+            }
+            return;
+        }
+        if (text === '❌ Panelni yopish') {
+            bot.sendMessage(chatId, "Admin paneli yopildi.", {
+                reply_markup: {
+                    remove_keyboard: true
+                }
+            });
+            return;
+        }
+    }
 
     // Agar foydalanuvchi bazada yo'q bo'lsa (masalan bot restart bo'lganda), uni qayta start bosishga majburlashimiz mumkin
     // yoki shunchaki yangi user deb olishimiz mumkin. Keling, yangi user deb olaylik.
