@@ -120,31 +120,32 @@ bot.on('message', (msg) => {
 
     // 2. RAQAM TANLASH BOSQICHI
     else if (user.state === STATE_SELECTING) {
-        if (/^([1-9]|10)$/.test(text)) {
-            const number = parseInt(text);
-            const filePath = path.join(__dirname, 'files', `${number}.txt`);
+        const links = {
+            '1': 'https://www.figma.com/design/xD5cmsEHVToJcGIYF2eHpF/1-Sayt?node-id=0-1&t=GcdoapXnatghLpz6-1',
+            '2': 'https://www.figma.com/design/cUKjTA1DvEpq03O6fUypXo/2-sayt?node-id=1-2&t=GcdoapXnatghLpz6-1',
+            '3': 'https://www.figma.com/design/XfyEaCFTGm0SjjPQzXrM8v/3-sayt?node-id=0-1&t=GcdoapXnatghLpz6-1',
+            '4': 'https://www.figma.com/design/p2RnjNgMn3D8c6CljpyWjx/4-sayt?node-id=0-1&t=GcdoapXnatghLpz6-1',
+            '5': 'https://www.figma.com/design/2tIQ2TsZazaRsU1ZPnVFuN/5-sayt?node-id=0-1&t=GcdoapXnatghLpz6-1',
+            '6': 'https://www.figma.com/design/grVClZ6qIobI3IkIYFaxIT/6-sayt?t=GcdoapXnatghLpz6-1',
+            '7': 'https://www.figma.com/design/RNUX8YYcXI0yHAbRwQq7Gh/7-sayt?node-id=0-1&t=GcdoapXnatghLpz6-1',
+            '8': 'https://www.figma.com/design/SP2TCYtrt5sx1wRwAiC71Z/8-sayt?node-id=0-1&t=GcdoapXnatghLpz6-1'
+        };
 
-            if (fs.existsSync(filePath)) {
-                // Holatni o'zgartiramiz, endi qayta tanlay olmaydi
-                user.state = STATE_DONE;
-                saveData(users);
+        if (links[text]) {
+            const link = links[text];
 
-                bot.sendMessage(chatId, `Siz ${number}-raqamni tanladingiz.`, {
-                    reply_markup: {
-                        remove_keyboard: true
-                    }
-                }).then(() => {
-                    bot.sendDocument(chatId, filePath).catch((error) => {
-                        console.error(error);
-                        bot.sendMessage(chatId, "Faylni yuborishda xatolik yuz berdi.");
-                    });
-                });
-            } else {
-                bot.sendMessage(chatId, `Kechirasiz, ${number}-raqam uchun fayl topilmadi.`);
-            }
+            // Holatni o'zgartiramiz, endi qayta tanlay olmaydi
+            user.state = STATE_DONE;
+            saveData(users);
+
+            bot.sendMessage(chatId, `Siz ${text}-raqamni tanladingiz. Mana siz uchun maxsus havola:\n\n${link}`, {
+                reply_markup: {
+                    remove_keyboard: true
+                }
+            });
         } else {
             // Agar noto'g'ri narsa yozsa
-            bot.sendMessage(chatId, "Iltimos, pastdagi tugmalardan foydalanib raqam tanlang.");
+            bot.sendMessage(chatId, "Iltimos, pastdagi tugmalardan foydalanib 1 dan 8 gacha raqam tanlang.");
         }
     }
 
@@ -162,8 +163,7 @@ function sendNumberKeyboard(chatId, text) {
             keyboard: [
                 ['1', '2', '3'],
                 ['4', '5', '6'],
-                ['7', '8', '9'],
-                ['10']
+                ['7', '8']
             ],
             resize_keyboard: true,
             one_time_keyboard: true
