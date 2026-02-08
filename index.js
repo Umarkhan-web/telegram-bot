@@ -57,6 +57,19 @@ const STATE_REGISTERING = 'REGISTERING';
 const STATE_SELECTING = 'SELECTING';
 const STATE_DONE = 'DONE';
 
+// /reset komandasi (TESTUCHUN)
+bot.onText(/\/reset/, (msg) => {
+    const chatId = msg.chat.id;
+    if (users[chatId]) {
+        delete users[chatId];
+        saveData(users);
+        bot.sendMessage(chatId, "Sizning ma'lumotlaringiz o'chirildi. Qayta /start bosishingiz mumkin.");
+    } else {
+        bot.sendMessage(chatId, "Siz hali ro'yxatdan o'tmagansiz.");
+    }
+});
+
+
 // /start komandasiga javob
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
@@ -71,7 +84,7 @@ bot.onText(/\/start/, (msg) => {
 
     // Agar allaqachon tugatgan bo'lsa
     if (users[chatId].state === STATE_DONE) {
-        bot.sendMessage(chatId, "Siz allaqachon tanlab bo'lgansiz. Qayta urinish mumkin emas.");
+        bot.sendMessage(chatId, "Siz allaqachon tanlab bo'lgansiz. Qayta urinish mumkin emas.\n(Qayta sinash uchun /reset ni bosing)");
         return;
     }
 
