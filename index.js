@@ -22,6 +22,18 @@ const token = process.env.BOT_TOKEN || '7972728722:AAGu6_3MqTX1IO43pWj6y1SerKXa3
 // Botni yaratish (polling true bo'lishi kerak, shunda bot xabarlarni tekshirib turadi)
 const bot = new TelegramBot(token, { polling: true });
 
+// Polling xatolarini ushlash
+bot.on('polling_error', (error) => {
+    console.error(`Polling error: ${error.code}: ${error.message}`);
+});
+
+// Xabar yuborish uchun yordamchi funksiya (xatolarni ushlash uchun)
+const sendMessage = (chatId, text, opts) => {
+    bot.sendMessage(chatId, text, opts).catch(err => {
+        console.error(`Error sending message to ${chatId}:`, err.message);
+    });
+};
+
 // Ma'lumotlar bazasi fayli
 const DB_FILE = path.join(__dirname, 'data.json');
 
@@ -73,7 +85,7 @@ bot.onText(/\/admin/, (msg) => {
                 one_time_keyboard: true
             }
         };
-        bot.sendMessage(chatId, "Admin paneliga xush kelibsiz. Quyidagilardan birini tanlang:", opts);
+        sendMessage(chatId, "Admin paneliga xush kelibsiz. Quyidagilardan birini tanlang:", opts);
     }
 });
 
@@ -87,7 +99,7 @@ bot.onText(/\/start/, (msg) => {
     if (chatId.toString() === ADMIN_ID) {
         users[chatId] = { state: STATE_REGISTERING };
         saveData(users);
-        bot.sendMessage(chatId, "👑 Admin rejimidasiz. Bot siz uchun qayta ishga tushdi.\n\nAssalomu alaykum! Iltimos, ism va familiyangizni yozib yuboring:");
+        sendMessage(chatId, "👑 Admin rejimidasiz. Bot siz uchun qayta ishga tushdi.\n\nAssalomu alaykum! Iltimos, ism va familiyangizni yozib yuboring:");
         return;
     }
 
@@ -95,7 +107,7 @@ bot.onText(/\/start/, (msg) => {
     if (!users[chatId]) {
         users[chatId] = { state: STATE_REGISTERING };
         saveData(users);
-        bot.sendMessage(chatId, "Assalomu alaykum! Iltimos, ism va familiyangizni yozib yuboring:");
+        sendMessage(chatId, "Assalomu alaykum! Iltimos, ism va familiyangizni yozib yuboring:");
         return;
     }
 
@@ -109,16 +121,16 @@ bot.onText(/\/start/, (msg) => {
 
         const selectedNumber = users[chatId].selectedNumber;
         if (selectedNumber) {
-            bot.sendMessage(chatId, `Siz allaqachon tanlab bo'lgansiz. Qayta urinish mumkin emas.\nSiz tanlagan raqam: ${selectedNumber}`);
+            sendMessage(chatId, `Siz allaqachon tanlab bo'lgansiz. Qayta urinish mumkin emas.\nSiz tanlagan raqam: ${selectedNumber}`);
         } else {
-            bot.sendMessage(chatId, "Siz allaqachon tanlab bo'lgansiz. Qayta urinish mumkin emas.");
+            sendMessage(chatId, "Siz allaqachon tanlab bo'lgansiz. Qayta urinish mumkin emas.");
         }
         return;
     }
 
     // Agar ro'yxatdan o'tish jarayonida bo'lsa
     if (users[chatId].state === STATE_REGISTERING) {
-        bot.sendMessage(chatId, "Iltimos, ism va familiyangizni yozib yuboring:");
+        sendMessage(chatId, "Iltimos, ism va familiyangizni yozib yuboring:");
         return;
     }
 
@@ -141,27 +153,27 @@ bot.on('message', (msg) => {
     if (chatId.toString() === ADMIN_ID) {
         if (text === '📊 Statistika') {
             const count = Object.keys(users).length;
-            bot.sendMessage(chatId, `Jami foydalanuvchilar: ${count} ta`);
+            sendMessage(chatId, `Jami foydalanuvchilar: ${count} ta`);
             return;
         }
         if (text === '🔄 Bazani tozalash (Reset All)') {
             users = {};
             saveData(users);
-            bot.sendMessage(chatId, "Barcha foydalanuvchilar ma'lumotlari o'chirildi. Bot barchaga yangidan boshlanadi.");
+            sendMessage(chatId, "Barcha foydalanuvchilar ma'lumotlari o'chirildi. Bot barchaga yangidan boshlanadi.");
             return;
         }
         if (text === "🗑 O'zimni o'chirish") {
             if (users[chatId]) {
                 delete users[chatId];
                 saveData(users);
-                bot.sendMessage(chatId, "Sizning ma'lumotlaringiz o'chirildi. /start bosib qayta tekshirishingiz mumkin.");
+                sendMessage(chatId, "Sizning ma'lumotlaringiz o'chirildi. /start bosib qayta tekshirishingiz mumkin.");
             } else {
-                bot.sendMessage(chatId, "Sizda o'chirish uchun ma'lumot yo'q.");
+                sendMessage(chatId, "Sizda o'chirish uchun ma'lumot yo'q.");
             }
             return;
         }
         if (text === '❌ Panelni yopish') {
-            bot.sendMessage(chatId, "Admin paneli yopildi.", {
+            sendMessage(chatId, "Admin paneli yopildi.", {
                 reply_markup: {
                     remove_keyboard: true
                 }
@@ -178,7 +190,7 @@ bot.on('message', (msg) => {
         // Ismni qabul qilish o'rniga, start bosishni so'raymiz yoki to'g'ridan-to'g'ri ism deb qabul qilamiz?
         // Mantiqan birinchi xabar ism bo'lishi ehtimoli katta agar start bosgandan keyin yozsa.
         // Lekin xavfsizlik uchun start bosishni so'ragan ma'qul.
-        bot.sendMessage(chatId, "Botni ishga tushirish uchun /start ni bosing.");
+        sendMessage(chatId, "Botni ishga tushirish uchun /start ni bosing.");
         return;
     }
 
@@ -214,14 +226,14 @@ bot.on('message', (msg) => {
             user.selectedNumber = text; // Raqamni saqlab qo'yamiz
             saveData(users);
 
-            bot.sendMessage(chatId, `Siz ${text}-raqamni tanladingiz. Mana siz uchun maxsus havola:\n\n${link}`, {
+            sendMessage(chatId, `Siz ${text}-raqamni tanladingiz. Mana siz uchun maxsus havola:\n\n${link}`, {
                 reply_markup: {
                     remove_keyboard: true
                 }
             });
         } else {
             // Agar noto'g'ri narsa yozsa
-            bot.sendMessage(chatId, "Iltimos, pastdagi tugmalardan foydalanib 1 dan 8 gacha raqam tanlang.");
+            sendMessage(chatId, "Iltimos, pastdagi tugmalardan foydalanib 1 dan 8 gacha raqam tanlang.");
         }
     }
 
@@ -245,7 +257,7 @@ function sendNumberKeyboard(chatId, text) {
             one_time_keyboard: true
         }
     };
-    bot.sendMessage(chatId, text, opts);
+    sendMessage(chatId, text, opts);
 }
 
 console.log('Bot ishga tushdi...');
